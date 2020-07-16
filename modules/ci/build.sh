@@ -39,6 +39,7 @@ ci_parse_arguments() {
 ci_parse_arguments $(tg_get_command_arguments "$@")
 if [ "$CI_PROJECT" != "" ]; then
 	if [ -f "modules/ci/$CI_PROJECT.sh" ]; then
+                tg_send_message --chat_id "$(tg_get_chat_id "$@")" --text "BuildBot CI is now starting...!!🔥" --reply_to_message_id "$(tg_get_message_id "$@")"
 		modules/ci/$CI_PROJECT.sh "$@"
 	else
 		tg_send_message --chat_id "$(tg_get_chat_id "$@")" --text "CI building failed: Project not found
