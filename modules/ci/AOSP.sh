@@ -86,6 +86,9 @@ ci_parse_arguments() {
 			-ic | --installclean )
 				CI_CLEAN=installclean
 				;;
+                        -s | --sync )
+                                CI_SYNC="repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags"
+                                ;;
 			-d | --device )
 				CI_DEVICE="${2}"
 				shift
@@ -147,6 +150,21 @@ if [ "$CI_MESSAGE_ID" = "" ]; then
 fi
 
 CI_BUILD_START=$(date +"%s")
+
+cd "${CI_MAIN_DIR}/${CI_AOSP_PROJECT}"
+
+if [ "$CI_SYNC" != "" ]; then
+	ci_message "Sync ($CI_SYNC)..."
+	$CI_SYNC &> sync_log.txt
+	CI_SYNC_STATUS=$?
+	if [ $CI_SYNC_STATUS != 0 ]; then
+		CI_BUILD_END=$(date +"%s")
+		CI_BUILD_DURATION=$(( CI_BUILD_END - CI_BUILD_START ))
+		ci_message "Build failed at sync in $(( CI_BUILD_DURATION / 60 )) minute(s) and $(( CI_BUILD_DURATION % 60 )) seconds"
+		tg_send_document --chat_id "$CI_CHANNEL_ID" --document "sync_log.txt" --reply_to_message_id "$CI_MESSAGE_ID"
+		exit
+	fi
+fi
 
 cd "${CI_MAIN_DIR}/${CI_AOSP_PROJECT}"
 ci_message "Setting up environment..."
