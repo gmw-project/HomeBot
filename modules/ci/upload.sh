@@ -21,19 +21,10 @@ ci_upload() {
 	elif [ "$CI_ARTIFACTS_UPLOAD_METHOD" = "mega" ]; then
 		mega-put "$1" / > /dev/null 2>&1 && mega-export -a "/$(basename $1)" | awk '{print $3}'
 	elif [ "$CI_ARTIFACTS_UPLOAD_METHOD" = "sourceforge" ]; then
-		# Recursively create dirs and upload file
-		sshpass -p $CI_SF_PASS sftp -oBatchMode=no $CI_SF_USER@frs.sourceforge.net:/home/frs/project/$CI_SF_PROJECT > /dev/null 2>&1 <<EOF
-mkdir CI
-cd CI
-mkdir $CI_AOSP_PROJECT
-cd $CI_AOSP_PROJECT
-mkdir $CI_DEVICE
-cd $CI_DEVICE
-put $1
-exit
-EOF
+		# Upload file
+		sshpass -p '$CI_SF_PASS' scp $CI_MAIN_DIR/$CI_AOSP_PROJECT/out/target/product/$CI_DEVICE/$CI_OUT_ARTIFACTS_NAME $CI_SF_USER@frs.sourceforge.net:/home/frs/project/$CI_SF_PROJECT/$CI_DEVICE
 		# Pass download link to the CI project script
-		echo "https://sourceforge.net/projects/$CI_SF_PROJECT/files/CI/$CI_AOSP_PROJECT/$CI_DEVICE/$(basename "$1")/download"
+		echo "https://sourceforge.net/projects/$CI_SF_PROJECT/files/$CI_DEVICE/$(basename "$1")/download"
 	fi
 }
 
